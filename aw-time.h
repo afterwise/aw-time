@@ -36,7 +36,7 @@ struct timebase {
 
 void timebase_init(struct timebase *tb);
 
-unsigned long timebase_count();
+unsigned long timebase_count(void);
 unsigned long timebase_msec(struct timebase *tb, unsigned long count);
 
 struct timer {

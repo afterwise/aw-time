@@ -62,7 +62,7 @@ void timebase_init(struct timebase *timebase) {
 #endif
 }
 
-unsigned long timebase_count() {
+unsigned long timebase_count(void) {
 #if __APPLE__
 	return mach_absolute_time();
 #elif _WIN32
