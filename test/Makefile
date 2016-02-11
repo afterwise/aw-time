@@ -2,11 +2,11 @@
 export CFLAGS += -std=c99 -D_DEFAULT_SOURCE -D_POSIX_C_SOURCE=200809L -Wall -Wextra
 
 ifeq ($(shell uname -s),Linux)
-export LDFLAGS += -lrt
+export LDLIBS += -lrt
 endif
 
 test: test.o ../libaw-time.a
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -I.. -c $< -o $@
