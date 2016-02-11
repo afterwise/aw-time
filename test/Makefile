@@ -1,5 +1,5 @@
 
-export CFLAGS += -std=c99 -D_DEFAULT_SOURCE -Wall -Wextra
+export CFLAGS += -std=c99 -D_POSIX_C_SOURCE=200809L -Wall -Wextra
 
 test: test.o ../libaw-time.a
 	$(CC) $(LDFLAGS) -o $@ $^
