@@ -53,10 +53,7 @@ void timebase_init(struct timebase *timebase) {
 	timebase->numer = 1;
 	timebase->denom = 1;
 #elif __linux__
-	struct timespec ts;
-	clock_getres(CLOCK_MONOTONIC, &ts);
-
-	timebase->freq = ts.tv_nsec;
+	timebase->freq = 1000000000;
 	timebase->numer = 1;
 	timebase->denom = 1;
 #endif
