@@ -4,6 +4,15 @@
 #include <assert.h>
 #include <stdio.h>
 
+/* XXX: ci debugging */
+#if __linux__
+# if _POSIX_C_SOURCE - 0 < 1L
+#  warning "no _POSIX_C_SOURCE"
+# elif _POSIX_C_SOURCE - 0 < 199309L
+#  warning "insufficient _POSIX_C_SOURCE"
+# endif
+#endif
+
 int main(int argc, char *argv[]) {
 	(void) argc;
 	(void) argv;
