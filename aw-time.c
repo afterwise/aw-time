@@ -30,7 +30,7 @@
 # if __APPLE__
 #  include <mach/mach_time.h>
 # endif
-# include <sys/time.h>
+# include <time.h>
 #endif
 #include <stdlib.h>
 
