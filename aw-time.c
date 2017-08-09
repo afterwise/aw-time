@@ -22,9 +22,7 @@
  */
 
 #ifndef _nofeatures
-# if _WIN32
-#  define WIN32_LEAN_AND_MEAN 1
-# elif __linux__
+# if __linux__
 #  define _BSD_SOURCE 1
 #  define _DEFAULT_SOURCE 1
 #  define _POSIX_C_SOURCE 200809L
@@ -36,7 +34,9 @@
 
 #include "aw-time.h"
 
-#if __CELLOS_LV2__
+#if _WIN32
+# include <windows.h>
+#elif __CELLOS_LV2__
 # include <sys/sys_time.h>
 # include <sys/timer.h>
 #elif __APPLE__ || __linux__
