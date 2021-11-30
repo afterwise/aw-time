@@ -1,6 +1,6 @@
 
 /*
-   Copyright (c) 2014-2016 Malte Hildingsson, malte (at) afterwi.se
+   Copyright (c) 2014-2021 Malte Hildingsson, malte (at) afterwi.se
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -28,29 +28,47 @@
 extern "C" {
 #endif
 
+typedef signed char time_s8_t;
+typedef unsigned char time_u8_t;
+typedef signed short time_s16_t;
+typedef unsigned short time_u16_t;
+typedef signed int time_s32_t;
+typedef unsigned int time_u32_t;
+#if _MSC_VER
+typedef signed __int64 time_s64_t;
+typedef unsigned __int64 time_u64_t;
+#else
+typedef signed long long time_s64_t;
+typedef unsigned long long time_u64_t;
+#endif
+typedef float time_f32_t;
+typedef double time_f64_t;
+
 struct timebase {
-	unsigned long freq;
-	unsigned numer;
-	unsigned denom;
+	time_u64_t freq;
+	time_f64_t inv_freq;
+	time_u32_t numer;
+	time_u32_t denom;
+	time_u32_t period;
 };
 
-void timebase_init(struct timebase *tb);
+void timebase_initialize(struct timebase *tb);
+void timebase_terminate(struct timebase *tb);
 
-unsigned long timebase_count(void);
-unsigned long timebase_msec(struct timebase *tb, unsigned long count);
+time_u64_t timebase_count(void);
+time_u64_t timebase_msec(const struct timebase *tb, time_u64_t count);
 
 struct timer {
-	unsigned long count;
-	double period;
-	float scale;
-	float raw_delta;
-	float smooth_delta;
+	time_u64_t count;
+	time_f32_t scale;
+	time_f32_t raw_delta;
+	time_f32_t smooth_delta;
 };
 
-void timer_init(struct timer *t, struct timebase *tb);
-void timer_update(struct timer *t);
+void timer_initialize(struct timer *t, const struct timebase *tb);
+void timer_update(struct timer *t, const struct timebase *tb);
 
-void snooze(unsigned msec);
+void snooze(time_u32_t msec);
 
 #ifdef __cplusplus
 } /* extern "C" */
