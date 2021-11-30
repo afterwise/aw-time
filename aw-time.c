@@ -1,6 +1,6 @@
 
 /*
-   Copyright (c) 2014-2016 Malte Hildingsson, malte (at) afterwi.se
+   Copyright (c) 2014-2021 Malte Hildingsson, malte (at) afterwi.se
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
    THE SOFTWARE.
  */
 
-#ifndef _nofeatures
+#ifndef _time_nofeatures
 # if __linux__
 #  define _BSD_SOURCE 1
 #  define _DEFAULT_SOURCE 1
@@ -30,7 +30,7 @@
 # elif __APPLE__
 #  define _DARWIN_C_SOURCE 1
 # endif
-#endif /* _nofeatures */
+#endif /* _time_nofeatures */
 
 #include "aw-time.h"
 
@@ -47,32 +47,52 @@
 #endif
 #include <stdlib.h>
 
-void timebase_init(struct timebase *timebase) {
+void timebase_initialize(struct timebase *tb) {
 #if __APPLE__
 	mach_timebase_info_data_t info;
 	mach_timebase_info(&info);
 
-	timebase->freq = 1000000000;
-	timebase->numer = info.numer;
-	timebase->denom = info.denom;
+	tb->freq = 1000000000;
+	tb->inv_freq = 1. / (time_f64_t) tb->freq;
+	tb->numer = info.numer;
+	tb->denom = info.denom;
+	tb->period = 1;
 #elif _WIN32
-	timeBeginPeriod(1);
+	TIMECAPS caps;
+	time_u32_t period;
 
-	QueryPerformanceFrequency((LARGE_INTEGER *) &timebase->freq);
-	timebase->numer = 1;
-	timebase->denom = 1;
+	timeGetDevCaps(&caps, sizeof caps);
+	period = caps.wPeriodMin > 1 ? caps.wPeriodMin : 1;
+	period = caps.wPeriodMax < period ? caps.wPeriodMax : period;
+	timeBeginPeriod(period);
+
+	QueryPerformanceFrequency((LARGE_INTEGER *) &tb->freq);
+	tb->inv_freq = 1. / (time_f64_t) tb->freq;
+	tb->numer = 1;
+	tb->denom = 1;
+	tb->period = period;
 #elif __CELLOS_LV2__
-	timebase->freq = sys_time_get_timebase_frequency();
-	timebase->numer = 1;
-	timebase->denom = 1;
+	tb->freq = sys_time_get_timebase_frequency();
+	tb->inv_freq = 1. / (time_f64_t) tb->freq;
+	tb->numer = 1;
+	tb->denom = 1;
+	tb->period = 1;
 #elif __linux__
-	timebase->freq = 1000000000;
-	timebase->numer = 1;
-	timebase->denom = 1;
+	tb->freq = 1000000000;
+	tb->inv_freq = 1. / (time_f64_t) tb->freq;
+	tb->numer = 1;
+	tb->denom = 1;
+	tb->period = 1;
 #endif
 }
 
-unsigned long timebase_count(void) {
+void timebase_terminate(struct timebase *tb) {
+#if _WIN32
+	timeEndPeriod(tb->period);
+#endif
+}
+
+time_u64_t timebase_count(void) {
 #if __APPLE__
 	return mach_absolute_time();
 #elif _WIN32
@@ -88,37 +108,35 @@ unsigned long timebase_count(void) {
 #endif
 }
 
-unsigned long timebase_msec(struct timebase *timebase, unsigned long count) {
-	const lldiv_t d = lldiv(count * timebase->numer, timebase->freq * timebase->denom);
-	return (d.quot * 1000) + (d.rem * 1000) / (timebase->freq * timebase->denom);
+time_u64_t timebase_msec(const struct timebase *tb, time_u64_t count) {
+	const lldiv_t d = lldiv(count * tb->numer, tb->freq * tb->denom);
+	return (d.quot * 1000) + (d.rem * 1000) / (tb->freq * tb->denom);
 }
 
-void timer_init(struct timer *timer, struct timebase *timebase) {
-	timer->count = timebase_count();
-	timer->period = 1. / (double) timebase->freq;
-	timer->scale = 1.f;
-	timer->raw_delta = 0.f;
-	timer->smooth_delta = 0.f;
+void timer_initialize(struct timer *t, const struct timebase *tb) {
+	t->count = timebase_count();
+	t->scale = 1.f;
+	t->raw_delta = 0.f;
+	t->smooth_delta = 0.f;
 }
 
-void timer_update(struct timer *timer) {
-	unsigned long count = timebase_count();
-	double weight = 1.0 / 3.0;
-	double delta = (double) (count - timer->count) * timer->period * timer->scale;
-	double prev_delta = timer->smooth_delta;
+void timer_update(struct timer *t, const struct timebase *tb) {
+	time_u64_t count = timebase_count();
+	time_f64_t weight = 1. / 3.;
+	time_f64_t delta = (time_f64_t) (count - t->count) * tb->inv_freq * t->scale;
 
-	timer->count = count;
-	timer->raw_delta = (float) delta;
-	timer->smooth_delta = (float) (weight * delta + (1.0 - weight) * prev_delta);
+	t->count = count;
+	t->raw_delta = (time_f32_t) delta;
+	t->smooth_delta = (time_f32_t) (weight * delta + (1. - weight) * t->smooth_delta);
 }
 
-void snooze(unsigned msec) {
+void snooze(time_u32_t msec) {
 #if _WIN32
 	Sleep(msec);
 #elif __CELLOS_LV2__
 	sys_timer_usleep(msec * 1000);
 #elif __linux__ || __APPLE__
-	unsigned sec = msec / 1000;
+	time_u32_t sec = msec / 1000;
 	struct timespec ts;
 
 	ts.tv_sec = sec;
