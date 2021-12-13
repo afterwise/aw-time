@@ -1,4 +1,4 @@
-
+/* vim: set ts=4 sw=4 noet : */
 /*
    Copyright (c) 2014-2021 Malte Hildingsson, malte (at) afterwi.se
 
@@ -53,13 +53,13 @@ void timebase_initialize(struct timebase *tb) {
 	mach_timebase_info(&info);
 
 	tb->freq = 1000000000;
-	tb->inv_freq = 1. / (time_f64_t) tb->freq;
+	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = info.numer;
 	tb->denom = info.denom;
 	tb->period = 1;
 #elif _WIN32
 	TIMECAPS caps;
-	time_u32_t period;
+	uint32_t period;
 
 	timeGetDevCaps(&caps, sizeof caps);
 	period = caps.wPeriodMin > 1 ? caps.wPeriodMin : 1;
@@ -67,19 +67,19 @@ void timebase_initialize(struct timebase *tb) {
 	timeBeginPeriod(period);
 
 	QueryPerformanceFrequency((LARGE_INTEGER *) &tb->freq);
-	tb->inv_freq = 1. / (time_f64_t) tb->freq;
+	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
 	tb->denom = 1;
 	tb->period = period;
 #elif __CELLOS_LV2__
 	tb->freq = sys_time_get_timebase_frequency();
-	tb->inv_freq = 1. / (time_f64_t) tb->freq;
+	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
 	tb->denom = 1;
 	tb->period = 1;
 #elif __linux__
 	tb->freq = 1000000000;
-	tb->inv_freq = 1. / (time_f64_t) tb->freq;
+	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
 	tb->denom = 1;
 	tb->period = 1;
@@ -92,7 +92,7 @@ void timebase_terminate(struct timebase *tb) {
 #endif
 }
 
-time_u64_t timebase_count(void) {
+uint64_t timebase_count(void) {
 #if __APPLE__
 	return mach_absolute_time();
 #elif _WIN32
@@ -108,9 +108,19 @@ time_u64_t timebase_count(void) {
 #endif
 }
 
-time_u64_t timebase_msec(const struct timebase *tb, time_u64_t count) {
+uint64_t timebase_msec(const struct timebase *tb, uint64_t count) {
 	const lldiv_t d = lldiv(count * tb->numer, tb->freq * tb->denom);
-	return (d.quot * 1000) + (d.rem * 1000) / (tb->freq * tb->denom);
+	return (d.quot * 1000ull) + (d.rem * 1000ull) / (tb->freq * tb->denom);
+}
+
+uint64_t timebase_usec(const struct timebase *tb, uint64_t count) {
+	const lldiv_t d = lldiv(count * tb->numer, tb->freq * tb->denom);
+	return (d.quot * 1000000ull) + (d.rem * 1000000ull) / (tb->freq * tb->denom);
+}
+
+uint64_t timebase_nsec(const struct timebase *tb, uint64_t count) {
+	const lldiv_t d = lldiv(count * tb->numer, tb->freq * tb->denom);
+	return (d.quot * 1000000000ull) + (d.rem * 1000000000ull) / (tb->freq * tb->denom);
 }
 
 void timer_initialize(struct timer *t, const struct timebase *tb) {
@@ -121,22 +131,22 @@ void timer_initialize(struct timer *t, const struct timebase *tb) {
 }
 
 void timer_update(struct timer *t, const struct timebase *tb) {
-	time_u64_t count = timebase_count();
-	time_f64_t weight = 1. / 3.;
-	time_f64_t delta = (time_f64_t) (count - t->count) * tb->inv_freq * t->scale;
+	uint64_t count = timebase_count();
+	double weight = 1. / 3.;
+	double delta = (double) (count - t->count) * tb->inv_freq * t->scale;
 
 	t->count = count;
-	t->raw_delta = (time_f32_t) delta;
-	t->smooth_delta = (time_f32_t) (weight * delta + (1. - weight) * t->smooth_delta);
+	t->raw_delta = (float) delta;
+	t->smooth_delta = (float) (weight * delta + (1. - weight) * t->smooth_delta);
 }
 
-void snooze(time_u32_t msec) {
+void snooze(uint32_t msec) {
 #if _WIN32
 	Sleep(msec);
 #elif __CELLOS_LV2__
 	sys_timer_usleep(msec * 1000);
 #elif __linux__ || __APPLE__
-	time_u32_t sec = msec / 1000;
+	uint32_t sec = msec / 1000;
 	struct timespec ts;
 
 	ts.tv_sec = sec;
