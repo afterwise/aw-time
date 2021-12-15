@@ -28,6 +28,21 @@
 # include <stdint.h>
 #endif
 
+#if defined(_time_dllexport)
+# if _MSC_VER
+#  define _time_api extern __declspec(dllexport)
+# elif __GNUC__
+#  define _time_api __attribute__((visibility("default"))) extern
+# endif
+#elif defined(_time_dllimport)
+# if _MSC_VER
+#  define _time_api extern __declspec(dllimport)
+# endif
+#endif
+#ifndef _time_api
+# define _time_api extern
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,13 +55,13 @@ struct timebase {
 	uint32_t period;
 };
 
-void timebase_initialize(struct timebase *tb);
-void timebase_terminate(struct timebase *tb);
+_time_api void timebase_initialize(struct timebase *tb);
+_time_api void timebase_terminate(struct timebase *tb);
 
-uint64_t timebase_count(void);
-uint64_t timebase_msec(const struct timebase *tb, uint64_t count);
-uint64_t timebase_usec(const struct timebase *tb, uint64_t count);
-uint64_t timebase_nsec(const struct timebase *tb, uint64_t count);
+_time_api uint64_t timebase_count(void);
+_time_api uint64_t timebase_msec(const struct timebase *tb, uint64_t count);
+_time_api uint64_t timebase_usec(const struct timebase *tb, uint64_t count);
+_time_api uint64_t timebase_nsec(const struct timebase *tb, uint64_t count);
 
 struct timer {
 	uint64_t count;
@@ -55,10 +70,10 @@ struct timer {
 	float smooth_delta;
 };
 
-void timer_initialize(struct timer *t, const struct timebase *tb);
-void timer_update(struct timer *t, const struct timebase *tb);
+_time_api void timer_initialize(struct timer *t, const struct timebase *tb);
+_time_api void timer_update(struct timer *t, const struct timebase *tb);
 
-void snooze(uint32_t msec);
+_time_api void snooze(uint32_t msec);
 
 #ifdef __cplusplus
 } /* extern "C" */
