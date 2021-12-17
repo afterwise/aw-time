@@ -87,6 +87,7 @@ void timebase_initialize(struct timebase *tb) {
 }
 
 void timebase_terminate(struct timebase *tb) {
+	(void) tb;
 #if _WIN32
 	timeEndPeriod(tb->period);
 #endif
@@ -123,7 +124,7 @@ uint64_t timebase_nsec(const struct timebase *tb, uint64_t count) {
 	return (d.quot * 1000000000ull) + (d.rem * 1000000000ull) / (tb->freq * tb->denom);
 }
 
-void timer_initialize(struct timer *t, const struct timebase *tb) {
+void timer_initialize(struct timer *t) {
 	t->count = timebase_count();
 	t->scale = 1.f;
 	t->raw_delta = 0.f;

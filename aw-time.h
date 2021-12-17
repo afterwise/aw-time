@@ -70,7 +70,7 @@ struct timer {
 	float smooth_delta;
 };
 
-_time_api void timer_initialize(struct timer *t, const struct timebase *tb);
+_time_api void timer_initialize(struct timer *t);
 _time_api void timer_update(struct timer *t, const struct timebase *tb);
 
 _time_api void snooze(uint32_t msec);
