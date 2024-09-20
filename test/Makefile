@@ -8,8 +8,8 @@ endif
 test: test.o ../libaw-time.a
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-%.o: %.c
-	$(CC) $(CFLAGS) -I.. -c $< -o $@
+%.o: %.x
+	$(CC) $(CFLAGS) -I.. -xc -c $< -o $@
 
 ../libaw-time.a:
 	$(MAKE) -C..

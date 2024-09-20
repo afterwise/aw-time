@@ -1,6 +1,6 @@
 /* vim: set ts=4 sw=4 noet : */
 /*
-   Copyright (c) 2014-2021 Malte Hildingsson, malte (at) afterwi.se
+   Copyright (c) 2014-2024 Malte Hildingsson, malte (at) afterwi.se
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,18 @@
 #ifndef AW_TIME_H
 #define AW_TIME_H
 
-#if !_MSC_VER || _MSC_VER >= 1600
+#if !defined(_MSC_VER) || _MSC_VER >= 1600
 # include <stdint.h>
 #endif
 
 #if defined(_time_dllexport)
-# if _MSC_VER
+# if defined(_MSC_VER)
 #  define _time_api extern __declspec(dllexport)
-# elif __GNUC__
+# elif defined(__GNUC__)
 #  define _time_api __attribute__((visibility("default"))) extern
 # endif
 #elif defined(_time_dllimport)
-# if _MSC_VER
+# if defined(_MSC_VER)
 #  define _time_api extern __declspec(dllimport)
 # endif
 #endif

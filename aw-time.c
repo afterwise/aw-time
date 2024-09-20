@@ -1,6 +1,6 @@
 /* vim: set ts=4 sw=4 noet : */
 /*
-   Copyright (c) 2014-2021 Malte Hildingsson, malte (at) afterwi.se
+   Copyright (c) 2014-2024 Malte Hildingsson, malte (at) afterwi.se
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
@@ -22,25 +22,25 @@
  */
 
 #ifndef _time_nofeatures
-# if __linux__
+# if defined(__linux__)
 #  define _BSD_SOURCE 1
 #  define _DEFAULT_SOURCE 1
 #  define _POSIX_C_SOURCE 200809L
 #  define _SVID_SOURCE 1
-# elif __APPLE__
+# elif defined(__APPLE__)
 #  define _DARWIN_C_SOURCE 1
 # endif
 #endif /* _time_nofeatures */
 
 #include "aw-time.h"
 
-#if _WIN32
+#if defined(_WIN32)
 # include <windows.h>
-#elif __CELLOS_LV2__
+#elif defined(__CELLOS_LV2__)
 # include <sys/sys_time.h>
 # include <sys/timer.h>
-#elif __APPLE__ || __linux__
-# if __APPLE__
+#elif defined(__APPLE__) || defined(__linux__)
+# if defined(__APPLE__)
 #  include <mach/mach_time.h>
 # endif
 # include <time.h>
@@ -48,7 +48,7 @@
 #include <stdlib.h>
 
 void timebase_initialize(struct timebase *tb) {
-#if __APPLE__
+#if defined(__APPLE__)
 	mach_timebase_info_data_t info;
 	mach_timebase_info(&info);
 
@@ -57,7 +57,7 @@ void timebase_initialize(struct timebase *tb) {
 	tb->numer = info.numer;
 	tb->denom = info.denom;
 	tb->period = 1;
-#elif _WIN32
+#elif defined(_WIN32)
 	TIMECAPS caps;
 	uint32_t period;
 
@@ -71,13 +71,13 @@ void timebase_initialize(struct timebase *tb) {
 	tb->numer = 1;
 	tb->denom = 1;
 	tb->period = period;
-#elif __CELLOS_LV2__
+#elif defined(__CELLOS_LV2__)
 	tb->freq = sys_time_get_timebase_frequency();
 	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
 	tb->denom = 1;
 	tb->period = 1;
-#elif __linux__
+#elif defined(__linux__)
 	tb->freq = 1000000000;
 	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
@@ -88,21 +88,21 @@ void timebase_initialize(struct timebase *tb) {
 
 void timebase_terminate(struct timebase *tb) {
 	(void) tb;
-#if _WIN32
+#if defined(_WIN32)
 	timeEndPeriod(tb->period);
 #endif
 }
 
 uint64_t timebase_count(void) {
-#if __APPLE__
+#if defined(__APPLE__)
 	return mach_absolute_time();
-#elif _WIN32
+#elif defined(_WIN32)
 	LARGE_INTEGER n;
 	QueryPerformanceCounter(&n);
 	return n.QuadPart;
-#elif __CELLOS_LV2__
+#elif defined(__CELLOS_LV2__)
 	return __mftb();
-#elif __linux__
+#elif defined(__linux__)
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return ts.tv_sec * 1000000000 + ts.tv_nsec;
@@ -142,11 +142,11 @@ void timer_update(struct timer *t, const struct timebase *tb) {
 }
 
 void snooze(uint32_t msec) {
-#if _WIN32
+#if defined(_WIN32)
 	Sleep(msec);
-#elif __CELLOS_LV2__
+#elif defined(__CELLOS_LV2__)
 	sys_timer_usleep(msec * 1000);
-#elif __linux__ || __APPLE__
+#elif defined(__linux__) || defined(__APPLE__)
 	uint32_t sec = msec / 1000;
 	struct timespec ts;
 
