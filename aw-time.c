@@ -36,10 +36,7 @@
 
 #if defined(_WIN32)
 # include <windows.h>
-#elif defined(__CELLOS_LV2__)
-# include <sys/sys_time.h>
-# include <sys/timer.h>
-#elif defined(__APPLE__) || defined(__linux__)
+#elif defined(__APPLE__) || defined(__linux__) || defined(__SCE__)
 # if defined(__APPLE__)
 #  include <mach/mach_time.h>
 # endif
@@ -58,26 +55,13 @@ void timebase_initialize(struct timebase *tb) {
 	tb->denom = info.denom;
 	tb->period = 1;
 #elif defined(_WIN32)
-	TIMECAPS caps;
-	uint32_t period;
-
-	timeGetDevCaps(&caps, sizeof caps);
-	period = caps.wPeriodMin > 1 ? caps.wPeriodMin : 1;
-	period = caps.wPeriodMax < period ? caps.wPeriodMax : period;
-	timeBeginPeriod(period);
-
+	timeBeginPeriod(1);
 	QueryPerformanceFrequency((LARGE_INTEGER *) &tb->freq);
 	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
 	tb->denom = 1;
-	tb->period = period;
-#elif defined(__CELLOS_LV2__)
-	tb->freq = sys_time_get_timebase_frequency();
-	tb->inv_freq = 1. / (double) tb->freq;
-	tb->numer = 1;
-	tb->denom = 1;
 	tb->period = 1;
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__SCE__)
 	tb->freq = 1000000000;
 	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
@@ -100,9 +84,7 @@ uint64_t timebase_count(void) {
 	LARGE_INTEGER n;
 	QueryPerformanceCounter(&n);
 	return n.QuadPart;
-#elif defined(__CELLOS_LV2__)
-	return __mftb();
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__SCE__)
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return ts.tv_sec * 1000000000 + ts.tv_nsec;
@@ -144,9 +126,7 @@ void timer_update(struct timer *t, const struct timebase *tb) {
 void snooze(uint32_t msec) {
 #if defined(_WIN32)
 	Sleep(msec);
-#elif defined(__CELLOS_LV2__)
-	sys_timer_usleep(msec * 1000);
-#elif defined(__linux__) || defined(__APPLE__)
+#elif defined(__linux__) || defined(__APPLE__) || defined(__SCE__)
 	uint32_t sec = msec / 1000;
 	struct timespec ts;
 
