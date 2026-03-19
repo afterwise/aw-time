@@ -22,7 +22,11 @@
  */
 
 #ifndef _time_nofeatures
-# if defined(__linux__)
+# if defined(_WIN32)
+#  if defined(_GAMING_XBOX)
+#   define WIN32_LEAN_AND_MEAN 1
+#  endif
+# elif defined(__linux__)
 #  define _BSD_SOURCE 1
 #  define _DEFAULT_SOURCE 1
 #  define _POSIX_C_SOURCE 200809L
@@ -55,7 +59,9 @@ void timebase_initialize(struct timebase *tb) {
 	tb->denom = info.denom;
 	tb->period = 1;
 #elif defined(_WIN32)
+# if !defined(_GAMING_XBOX)
 	timeBeginPeriod(1);
+# endif
 	QueryPerformanceFrequency((LARGE_INTEGER *) &tb->freq);
 	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
@@ -73,7 +79,9 @@ void timebase_initialize(struct timebase *tb) {
 void timebase_terminate(struct timebase *tb) {
 	(void) tb;
 #if defined(_WIN32)
+# if !defined(_GAMING_XBOX)
 	timeEndPeriod(tb->period);
+# endif
 #endif
 }
 
