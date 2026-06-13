@@ -26,7 +26,7 @@
 #  if defined(_GAMING_XBOX)
 #   define WIN32_LEAN_AND_MEAN 1
 #  endif
-# elif defined(__linux__)
+# elif defined(__linux__) || defined(__NINTENDO__)
 #  define _BSD_SOURCE 1
 #  define _DEFAULT_SOURCE 1
 #  define _POSIX_C_SOURCE 200809L
@@ -40,7 +40,7 @@
 
 #if defined(_WIN32)
 # include <windows.h>
-#elif defined(__APPLE__) || defined(__linux__) || defined(__SCE__)
+#elif defined(__APPLE__) || defined(__linux__) || defined(__SCE__) || defined(__NINTENDO__)
 # if defined(__APPLE__)
 #  include <mach/mach_time.h>
 # endif
@@ -67,7 +67,7 @@ void timebase_initialize(struct timebase *tb) {
 	tb->numer = 1;
 	tb->denom = 1;
 	tb->period = 1;
-#elif defined(__linux__) || defined(__SCE__)
+#elif defined(__linux__) || defined(__SCE__) || defined(__NINTENDO__)
 	tb->freq = 1000000000;
 	tb->inv_freq = 1. / (double) tb->freq;
 	tb->numer = 1;
@@ -92,7 +92,7 @@ uint64_t timebase_count(void) {
 	LARGE_INTEGER n;
 	QueryPerformanceCounter(&n);
 	return n.QuadPart;
-#elif defined(__linux__) || defined(__SCE__)
+#elif defined(__linux__) || defined(__SCE__) || defined(__NINTENDO__)
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return ts.tv_sec * 1000000000 + ts.tv_nsec;
@@ -134,7 +134,7 @@ void timer_update(struct timer *t, const struct timebase *tb) {
 void snooze(uint32_t msec) {
 #if defined(_WIN32)
 	Sleep(msec);
-#elif defined(__linux__) || defined(__APPLE__) || defined(__SCE__)
+#elif defined(__linux__) || defined(__APPLE__) || defined(__SCE__) || defined(__NINTENDO__)
 	uint32_t sec = msec / 1000;
 	struct timespec ts;
 
