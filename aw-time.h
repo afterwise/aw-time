@@ -28,6 +28,13 @@
 # include <stdint.h>
 #endif
 
+#if !defined(__clang__)
+# include <intrin.h>
+# if defined(_M_IX86) || defined(_M_X64)
+#  pragma intrinsic(__rdtsc)
+# endif
+#endif
+
 #if defined(_time_dllexport)
 # if defined(_MSC_VER)
 #  define _time_api extern __declspec(dllexport)
@@ -45,6 +52,12 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#if defined(__clang__)
+# define time_readcyclecounter() (__builtin_readcyclecounter())
+#else
+# define time_readcyclecounter() (__rdtsc())
 #endif
 
 struct timebase {
