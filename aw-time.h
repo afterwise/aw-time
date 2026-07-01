@@ -56,8 +56,10 @@ extern "C" {
 
 #if defined(__clang__)
 # define time_readcyclecounter() (__builtin_readcyclecounter())
-#else
+#elif defined(_M_IX86) || defined(_M_X64)
 # define time_readcyclecounter() (__rdtsc())
+#elif defined(_M_ARM64)
+# define time_readcyclecounter() (_ReadStatusReg(0x5f02))
 #endif
 
 struct timebase {
