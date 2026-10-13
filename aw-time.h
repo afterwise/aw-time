@@ -30,7 +30,7 @@
 
 #if !defined(__clang__)
 # include <intrin.h>
-# if defined(_M_IX86) || defined(_M_X64)
+# if (defined(_M_IX86) || defined(_M_X64)) && !defined(_M_ARM64EC)
 #  pragma intrinsic(__rdtsc)
 # endif
 #endif
